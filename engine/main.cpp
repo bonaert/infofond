@@ -17,18 +17,26 @@ int example_of_array[1];
 Solver solver;
 vec<Lit> literals;
 
+int dans_gare[TRAIN][TIMESLOT][STATION];
+int sur_voie[TRAIN][TIMESLOT][STATION][STATION];
 
-
-// one variable
-void init_varA () {
-	example_of_array[0] = solver.newVar();
+void initVariables () {
+	for (int i = 0; i < TRAIN; ++i)
+	{
+		for (int j = 0; j < TIMESLOT; ++j)
+		{
+			for (int k = 0; k < STATION; ++k)
+			{
+				for (int l = 0; l < STATION; ++l)
+				{
+					sur_voie[i][j][k][l] = solver.newVar();
+				}
+				dans_gare[i][j][k] = solver.newVar();
+			}
+		}
+	}
 }
 
-
-// no more variables
-void init_varB () {
-
-}
 
 
 // useless
@@ -67,9 +75,7 @@ int main() {
 	// ---------- Variables ---------- //
 
 	
-
-	init_varA();
-	init_varB();
+	initVariables();
 
 
 
