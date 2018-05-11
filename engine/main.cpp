@@ -53,9 +53,73 @@ void constraint_AB (Graph *map) {
 }
 
 
-void setupContrainte1(Graph *map){
 
+// contrainte1 
+
+vec<Lit> contraintes1Trajet;
+void setupContrainte1FaireTrajet(Graph *map){
+	int iEnd;
+	int i2;
+	for (int g1 = 0; g1 < STATION; ++g1)
+	{
+		for (int g2 = 0; g2 < STATION; ++g2)
+		{
+			for (int iStart = 0; iStart <= TIMESLOT - TIMEWINDOW; ++iStart)
+			{
+				contraintes1Trajet.clear();
+
+				iEnd = iStart + TIMEWINDOW - 1;
+
+				for (int i1 = iStart; i1 < TIMESLOT; ++i1)
+				{
+					i2 = i1 + map->get_duration(g1, g2);
+
+					if (i2 > iEnd) {
+						break;
+					}
+
+
+					for (int t = 0; t < TRAIN; ++t)
+					{
+						contraintes1Trajet.push(~Lit(sur_voie[t][i1][g1][g2]));
+						contraintes1Trajet.push(~Lit(sur_voie[t][i2][g1][g2]));
+					}
+				}				
+
+				solver.addClause(contraintes1Trajet);
+			}
+		}
+	}
 }
+
+vec<Lit> contraintes1Gare;
+void setupContrainte1AllerGare(Graph *map){
+	for (int g = 0; g < STATION; ++g)
+	{
+		for (int iStart = 0; iStart <= TIMESLOT - TIMEWINDOW; ++iStart)
+		{
+			contraintes1Gare.clear();
+
+			for (int i = iStart; i < iStart + TIMEWINDOW; ++i)
+			{
+				for (int t = 0; t < TRAIN; ++t)
+				{
+					contraintes1Gare.push(Lit(dans_gare[t][i][g]));
+				}
+			}	
+
+			solver.addClause(contraintes1Gare);			
+		}
+	}
+}
+
+void setupContrainte1(Graph *map){
+	// Trajet entre toute paire de gares dans chaque timewindow
+	setupContrainte1FaireTrajet(map);
+	//setupContrainte1AllerGare(map);
+}
+
+// end contrainte 1
 
 vec<Lit> literals2;
 void setupContrainte2(Graph *map){
@@ -86,7 +150,22 @@ void setupContrainte3(Graph *map){
 
 }
 
+vec<Lit> contraints4;
 void setupContrainte4(Graph *map){
+	// On reste dans les gares TimeWait minutes
+	for (int t = 0; t < TRAIN; ++t)
+	{
+		for (int g = 0; g < STATION; ++g)
+		{
+			for (int i = 0; i < TIMESLOT; ++i)
+			{
+				for (int iEnd = i + 1; iEnd < i + TIMEWAIT && iEnd < TIMESLOT; ++iEnd)
+				{
+						solver.addTernary(Lit(dans_gare[t][i - 1][g]), ~Lit(dans_gare[t][i][g]), Lit(dans_gare[t][iEnd][g]));
+				}
+			}
+		}
+	}
 
 }
 
