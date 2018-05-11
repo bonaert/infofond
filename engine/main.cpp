@@ -39,6 +39,12 @@ void initVariables () {
 
 
 
+// Helpers
+bool voie_exists(Graph* map, int i, int k) {
+	return map->get_duration(i, k) > 0;
+}
+
+
 // useless
 void constraint_AB (Graph *map) {
 	literals.clear();
@@ -51,8 +57,29 @@ void setupContrainte1(Graph *map){
 
 }
 
+vec<Lit> literals2;
 void setupContrainte2(Graph *map){
+	// Pas 2 trains sur la même voie
+	for (int g1 = 0; g1 < STATION; ++g1)
+	{
+		for (int g2 = 0; g2 < STATION; ++g2)
+		{
+			if (g1 == g2) {
+				continue;
+			}
 
+			for (int i = 0; i < TIMESLOT; ++i)
+			{
+				for (int t1 = 0; t1 < TRAIN; ++t1)
+				{
+					for (int t2 = t1 + 1; t2 < TRAIN; ++t2)
+					{
+						solver.addBinary(~Lit(sur_voie[t1][i][g1][g2]), ~Lit(sur_voie[t2][i][g1][g2]));
+					}
+				}
+			}
+		}
+	}
 }
 
 void setupContrainte3(Graph *map){
@@ -71,8 +98,28 @@ void setupContrainte6(Graph *map){
 
 }
 
-
+vec<Lit> contraintesImplicites2;
 void setupContrainteImplicite1(Graph *map){
+	// Tout train doit être quelque part
+	for (int t = 0; t < TRAIN; ++t)
+	{
+		for (int i = 0; i < TIMESLOT; ++i)
+		{
+			contraintesImplicites2.clear();
+			
+			for (int g1 = 0; g1 < STATION; ++g1)
+			{
+				for (int g2 = 0; g2 < STATION; ++g2)
+				{
+					if (voie_exists(map, g1, g2)) {
+						contraintesImplicites2.push(Lit(sur_voie[t][i][g1][g2]));	
+					}
+				}
+				contraintesImplicites2.push(Lit(dans_gare[t][i][g1]));
+			}
+			solver.addClause(contraintesImplicites2);
+		}
+	}
 
 }
 
@@ -126,6 +173,8 @@ int main() {
 	setupContrainte4(map);
 	setupContrainte5(map);
 	setupContrainte6(map);
+
+	std::cout << "Adding implicit clauses"  << std::endl;
 
 	setupContrainteImplicite1(map);
 	setupContrainteImplicite2(map);
