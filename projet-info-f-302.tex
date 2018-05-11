@@ -1,0 +1,82 @@
+\documentclass[a4paper]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\title{Projet INFO-F-302 : Gestion des horaires de train}
+\author{MAHIA Jérôme, BONAERT Gregory}
+
+\begin{document}
+\maketitle
+
+\section{Sémantique des variables booléennes}
+
+
+
+
+\section{Formules des contraintes}
+
+\subsection{Pour toute paire de gare (g, g'), pour chaque fenêtre horaire de durée TimeWindow,
+il existe un train qui dessert g dans cette fenêtre, puis, plus tard, ce même train
+desservira g', après une durée de trajet d’au plus TravelDuration.}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. 
+
+\subsection{Pour prévenir tout risque de collision, une voie de chemin de fer entre deux gares,
+appelé segment, peut accueillir au plus un train.}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi.
+
+\subsection{Les trains de type slow sont des omnibus : ils sont tenus de s’arrêter dans toutes les
+gares. Les trains de type fast ne sont tenus de s’arrêter que dans les gares de type big.}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+
+\subsection{Afin de permettre aux usagers de monter à bord, tout train desservant une gare doit
+le faire durant une durée d’au moins TimeWait.}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus.
+
+\subsection{Les trains doivent respecter les temps de trajet prévus par l’infrastructure entre deux
+gares. On supposera constant, les temps de trajet entre deux gares, ils seront donc donnés en entrée du problème.}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. 
+
+\subsection{Une gare ne peut accueillir plus de trains que ce que sa capacité le permet.}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. 
+
+\section{?Contraintes retirées?}
+
+\section{Questions supplémentaires}
+
+\subsection{Remplacement de la première contrainte}
+
+Remplaçons la première contrainte par: \\
+
+Pour toute paire de gare $(g, g')$, pour chaque fenêtre horaire de durée $TimeWindow$,
+il est possible de prendre un train dans la fenêtre horaire, en gare $g$, pour aller vers $g'$
+après une durée maximale de trajet $TravelDuration$, le tout en changeant potentielle-
+ment de train au plus $NbChange$ fois. La version précédente du problème correspond
+au cas $NbChange=0$.
+
+\subsection{Proposer deux améliorations
+rendant le modèle plus réaliste.}
+
+% TODO ne pas oublier d'expliquer comment les modéliser en SAT
+
+\section{Bonus}
+
+
+\end{document}
