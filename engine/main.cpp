@@ -1,7 +1,7 @@
 #include "graph.hpp"
 #include "../solver/Solver.hpp"
 #include <iostream>
-
+#include <vector>
 
 #define TIMEWAIT 3			// le temps d'attente minimum dans une gare desservie
 #define SLOW 1				// nombre de train lent
@@ -94,30 +94,86 @@ void setupContrainte5(Graph *map){
 
 }
 
-void setupContrainte6(Graph *map){
 
+// Contrainte 6
+
+std::vector<int> combination;
+std::vector<int> choices;
+vec<Lit> ensembleConstraints;
+
+void makeContraintForEnsemble(Graph *map, int gare) {
+	ensembleConstraints.clear();
+	std::cout << "Train Ensemble:";
+	for (std::vector<int>::iterator train = combination.begin(); train != combination.end(); ++train)
+	{	
+		std::cout << " " << *train;
+		for (int i = 0; i < TIMESLOT; ++i)
+		{
+			ensembleConstraints.push(~Lit(dans_gare[*train][i][gare]));
+		}
+	}
+	std::cout << std::endl;
 }
 
-vec<Lit> contraintesImplicites2;
+void makeConstraintFor6(Graph *map, int gare, int offset, int k) {
+  if (k == 0) {
+    makeContraintForEnsemble(map, gare);
+    return;
+  }
+  for (int i = offset; i <= (int) choices.size() - k; ++i) {
+    combination.push_back(choices[i]);
+    makeConstraintFor6(map, gare, i+1, k-1);
+    combination.pop_back();
+  }
+}
+
+void makeConstraintForGare(Graph *map, int gare) {
+	int capacity = map->get_capacity(gare);
+	int n = TRAIN, k = capacity + 1;
+
+	if (n <= k) {
+		return;
+	}
+
+	choices.clear();
+    for (int i = 0; i < TRAIN; ++i) { 
+    	choices.push_back(i); 
+    }
+  
+	makeConstraintFor6(map, gare, 0, k);
+}
+
+void setupContrainte6(Graph* map){
+	// On doit respecter la capacité des gares
+	for (int g = 0; g < STATION; ++g)
+	{
+		makeConstraintForGare(map, g);
+	}
+	
+}
+
+// End contrainte6
+
+vec<Lit> contraintesImplicites1;
 void setupContrainteImplicite1(Graph *map){
 	// Tout train doit être quelque part
 	for (int t = 0; t < TRAIN; ++t)
 	{
 		for (int i = 0; i < TIMESLOT; ++i)
 		{
-			contraintesImplicites2.clear();
+			contraintesImplicites1.clear();
 			
 			for (int g1 = 0; g1 < STATION; ++g1)
 			{
 				for (int g2 = 0; g2 < STATION; ++g2)
 				{
 					if (g1 != g2 && voie_exists(map, g1, g2)) {
-						contraintesImplicites2.push(Lit(sur_voie[t][i][g1][g2]));	
+						contraintesImplicites1.push(Lit(sur_voie[t][i][g1][g2]));	
 					}
 				}
-				contraintesImplicites2.push(Lit(dans_gare[t][i][g1]));
+				contraintesImplicites1.push(Lit(dans_gare[t][i][g1]));
 			}
-			solver.addClause(contraintesImplicites2);
+			solver.addClause(contraintesImplicites1);
 		}
 	}
 
