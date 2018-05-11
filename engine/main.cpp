@@ -192,25 +192,11 @@ void setupContrainteImplicite4(Graph *map){
 
 			for (int g3 = 0; g3 < STATION; ++g3)
 			{
-				for (int g4 = 0; g4 < STATION; ++g4)
+				for (int i = 0; i < TIMESLOT; ++i)
 				{
-					if (g3 == g4 || !voie_exists(map, g3, g4)) {
-						// Voie n'existe pas
-						continue;
-					}
-
-					if (g1 == g3 && g2 == g4) {
-						// Meme voie
-						continue;
-					}
-
-
-					for (int i = 0; i < TIMESLOT; ++i)
+					for (int t = 0; t < TRAIN; ++t)
 					{
-						for (int t = 0; t < TRAIN; ++t)
-						{
-							solver.addBinary(~Lit(sur_voie[t][i][g1][g2]), ~Lit(sur_voie[t][i][g3][g4]));
-						}
+						solver.addBinary(~Lit(dans_gare[t][i][g3]), ~Lit(sur_voie[t][i][g1][g2]));
 					}
 				}
 			}
