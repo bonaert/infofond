@@ -47,6 +47,45 @@ void constraint_AB (Graph *map) {
 }
 
 
+void setupContrainte1(Graph *map){
+
+}
+
+void setupContrainte2(Graph *map){
+
+}
+
+void setupContrainte3(Graph *map){
+
+}
+
+void setupContrainte4(Graph *map){
+
+}
+
+void setupContrainte5(Graph *map){
+
+}
+
+void setupContrainte6(Graph *map){
+
+}
+
+
+void setupContrainteImplicite1(Graph *map){
+
+}
+
+void setupContrainteImplicite2(Graph *map){
+
+}
+
+void setupContrainteImplicite3(Graph *map){
+
+}
+
+
+
 
 int main() {
 	// ---------- Map ---------- //
@@ -81,7 +120,18 @@ int main() {
 
 	// ---------- Constraints ---------- //
 
-	constraint_AB(map);
+	setupContrainte1(map);
+	setupContrainte2(map);
+	setupContrainte3(map);
+	setupContrainte4(map);
+	setupContrainte5(map);
+	setupContrainte6(map);
+
+	setupContrainteImplicite1(map);
+	setupContrainteImplicite2(map);
+	setupContrainteImplicite3(map);
+
+
 
 
 
