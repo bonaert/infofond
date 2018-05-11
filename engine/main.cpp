@@ -111,7 +111,7 @@ void setupContrainteImplicite1(Graph *map){
 			{
 				for (int g2 = 0; g2 < STATION; ++g2)
 				{
-					if (voie_exists(map, g1, g2)) {
+					if (g1 != g2 && voie_exists(map, g1, g2)) {
 						contraintesImplicites2.push(Lit(sur_voie[t][i][g1][g2]));	
 					}
 				}
@@ -124,11 +124,106 @@ void setupContrainteImplicite1(Graph *map){
 }
 
 void setupContrainteImplicite2(Graph *map){
-
+	// Un train ne peut pas être dans 2 gares différentes au même moment
+	for (int g1 = 0; g1 < STATION; ++g1)
+	{
+		for (int g2 = g1 + 1; g2 < STATION; ++g2)
+		{
+			for (int i = 0; i < TIMESLOT; ++i)
+			{
+				for (int t = 0; t < TRAIN; ++t)
+				{
+					solver.addBinary(~Lit(dans_gare[t][i][g1]), ~Lit(dans_gare[t][i][g2]));
+				}
+			}
+		}
+	}
 }
 
 void setupContrainteImplicite3(Graph *map){
+	// Un train ne peut pas être sur 2 segment différents au même moment
+	for (int g1 = 0; g1 < STATION; ++g1)
+	{
+		for (int g2 = 0; g2 < STATION; ++g2)
+		{
+			if (g1 == g2 || !voie_exists(map, g1, g2)) {
+				// Voie n'existe pas
+				continue;
+			}
 
+			for (int g3 = 0; g3 < STATION; ++g3)
+			{
+				for (int g4 = 0; g4 < STATION; ++g4)
+				{
+					if (g3 == g4 || !voie_exists(map, g3, g4)) {
+						// Voie n'existe pas
+						continue;
+					}
+
+					if (g1 == g3 && g2 == g4) {
+						// Meme voie
+						continue;
+					}
+
+
+					for (int i = 0; i < TIMESLOT; ++i)
+					{
+						for (int t = 0; t < TRAIN; ++t)
+						{
+							solver.addBinary(~Lit(sur_voie[t][i][g1][g2]), ~Lit(sur_voie[t][i][g3][g4]));
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void setupContrainteImplicite4(Graph *map){
+	// Un train ne peut pas être sur un segment et une gare au même moment
+	for (int g1 = 0; g1 < STATION; ++g1)
+	{
+		for (int g2 = 0; g2 < STATION; ++g2)
+		{
+			if (g1 == g2 || !voie_exists(map, g1, g2)) {
+				// Voie n'existe pas
+				continue;
+			}
+
+			for (int g3 = 0; g3 < STATION; ++g3)
+			{
+				for (int g4 = 0; g4 < STATION; ++g4)
+				{
+					if (g3 == g4 || !voie_exists(map, g3, g4)) {
+						// Voie n'existe pas
+						continue;
+					}
+
+					if (g1 == g3 && g2 == g4) {
+						// Meme voie
+						continue;
+					}
+
+
+					for (int i = 0; i < TIMESLOT; ++i)
+					{
+						for (int t = 0; t < TRAIN; ++t)
+						{
+							solver.addBinary(~Lit(sur_voie[t][i][g1][g2]), ~Lit(sur_voie[t][i][g3][g4]));
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void setupContrainteImplicite5(Graph *map){
+
+}
+
+void setupContrainteImplicite6(Graph *map){
+	
 }
 
 
@@ -179,6 +274,9 @@ int main() {
 	setupContrainteImplicite1(map);
 	setupContrainteImplicite2(map);
 	setupContrainteImplicite3(map);
+	setupContrainteImplicite4(map);
+	setupContrainteImplicite5(map);
+	setupContrainteImplicite6(map);
 
 
 
