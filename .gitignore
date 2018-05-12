@@ -35,3 +35,9 @@
 .project
 *~
 Train
+
+# Rapport
+*.aux
+*.log
+*.out
+*.synctex.gz
