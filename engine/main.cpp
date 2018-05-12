@@ -53,6 +53,14 @@ void constraint_AB (Graph *map) {
 }
 
 
+bool isFast(int t){
+	return SLOW <= t && t < TRAIN;
+}
+
+bool isSmall(Graph* map, int gare) {
+	return map->get_type(gare) == Small;
+}
+
 
 // contrainte1 
 
@@ -147,6 +155,34 @@ void setupContrainte2(Graph *map){
 }
 
 void setupContrainte3(Graph *map){
+	// Les trains de type slow sont des omnibus : ils sont tenus de s’arrêter dans toutes les
+    // gares. Les trains de type fast ne sont tenus de s’arrêter que dans les gares de type big.
+    for (int t = 0; t < TRAIN; ++t)
+    {
+    	for (int i = 0; i < TIMESLOT - 1; ++i)
+    	{
+    		for (int g1 = 0; g1 < TRAIN; ++g1)
+    		{
+    			for (int g2 = 0; g2 < TRAIN; ++g2)
+    			{
+    				if (!voie_exists(map, g1, g2)) {
+    					continue;
+    				}
+
+    				for (int g3 = 0; g3 < TRAIN; ++g3)
+    				{
+    					if (!voie_exists(map, g2, g3)) {
+							continue;
+						}
+
+						if (!(isFast(t) && isSmall(map, g2))) {
+							solver.addBinary(~Lit(sur_voie[t][i][g1][g2]), ~Lit(sur_voie[t][i + 1][g2][g3]));
+						}
+    				}
+    			}
+    		}
+    	}
+    }
 
 }
 
