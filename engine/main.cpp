@@ -407,6 +407,35 @@ void setupContrainteImplicite6(Graph *map){
 }
 
 
+void printResults(){
+
+}
+
+void printRes() {
+	for (int i = 0; i < TIMESLOT; ++i) {
+        std::cout << "Time = " << i << std::endl;
+        std::cout << "-------" << std::endl;
+        for (int t = 0; t < TRAIN; ++t) {
+        	for (int g1 = 0; g1 < STATION; ++g1) {
+                if (solver.model[dans_gare[t][i][g1]] == l_True) {
+                    std::cout << "Le train " << t << " est dans la gare " << g1 << std::endl;
+
+                }
+
+                for (int g2 = 0; g2 < STATION; ++g2)  {
+                    if (solver.model[sur_voie[t][i][g1][g2]] == l_True) {
+                        std::cout << "Le train " << t << " est sur le segment entre la gare "
+                                  << g1 << " et " << g2 << std::endl;
+
+                    }
+                }
+            }
+
+        }
+        std::cout << std::endl;
+    }
+}
+
 
 
 int main() {
@@ -479,6 +508,7 @@ int main() {
 		printf("\nYES\n");
 	}
 
+	printRes();
 
 
 	// ---------- Delete ---------- //
