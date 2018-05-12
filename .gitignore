@@ -41,3 +41,6 @@ Train
 *.log
 *.out
 *.synctex.gz
+
+rapport/images/*
+rapport/main.tex
