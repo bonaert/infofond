@@ -192,6 +192,7 @@ void makeContraintForEnsemble(Graph *map, int gare) {
 		}
 	}
 	std::cout << std::endl;
+	solver.addClause(ensembleConstraints);
 }
 
 void makeConstraintFor6(Graph *map, int gare, int offset, int k) {
