@@ -197,7 +197,7 @@ void setupContrainte4(Graph *map){
 			{
 				for (int iEnd = i + 1; iEnd < i + TIMEWAIT && iEnd < TIMESLOT; ++iEnd)
 				{
-						solver.addTernary(Lit(dans_gare[t][i - 1][g]), ~Lit(dans_gare[t][i][g]), Lit(dans_gare[t][iEnd][g]));
+					solver.addTernary(Lit(dans_gare[t][i - 1][g]), ~Lit(dans_gare[t][i][g]), Lit(dans_gare[t][iEnd][g]));
 				}
 			}
 		}
@@ -206,7 +206,29 @@ void setupContrainte4(Graph *map){
 }
 
 void setupContrainte5(Graph *map){
-
+	int travelDuration;
+	for (int g1 = 0; g1 < STATION; ++g1)
+	{
+		for (int g2 = 0; g2 < STATION; ++g2)
+		{
+			if (!voie_exists(map, g1, g2)) {
+				continue;
+			}
+				
+			travelDuration = map->get_duration(g1, g2);
+				
+			for (int t = 0; t < TRAIN; ++t)
+			{
+				for (int i = 0; i < TIMESLOT - travelDuration; ++i)
+				{
+					for (int i2 = 0; i2 < i + travelDuration; ++i2)
+					{
+						solver.addTernary(Lit(sur_voie[t][i - 1][g1][g2]), ~Lit(sur_voie[t][i][g1][g2]), Lit(sur_voie[t][i2][g1][g2]));
+					}
+				}
+			}
+		}
+	}
 }
 
 
