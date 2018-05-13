@@ -66,23 +66,20 @@ bool isSmall(Graph* map, int gare) {
 
 vec<Lit> contraintes1Trajet;
 void setupContrainte1FaireTrajet(Graph *map){
-	int iEnd;
 	int i2;
 	for (int g1 = 0; g1 < STATION; ++g1)
 	{
 		for (int g2 = 0; g2 < STATION; ++g2)
 		{
-			for (int iStart = 0; iStart <= TIMESLOT - TIMEWINDOW; ++iStart)
+			for (int iStart = 0; iStart <= TIMESLOT - TIMEWINDOW; iStart = iStart + TIMEWINDOW)
 			{
 				contraintes1Trajet.clear();
 
-				iEnd = iStart + TIMEWINDOW - 1;
-
-				for (int i1 = iStart; i1 < TIMESLOT; ++i1)
+				for (int i1 = iStart; i1 < iStart + TIMEWINDOW && iStart < TIMESLOT; ++i1)
 				{
 					i2 = i1 + map->get_duration(g1, g2);
 
-					if (i2 > iEnd) {
+					if (i2 >= TIMESLOT) {
 						break;
 					}
 
@@ -104,14 +101,15 @@ vec<Lit> contraintes1Gare;
 void setupContrainte1AllerGare(Graph *map){
 	for (int g = 0; g < STATION; ++g)
 	{
-		for (int iStart = 0; iStart <= TIMESLOT - TIMEWINDOW; ++iStart)
+		for (int iStart = 0; iStart + TIMEWINDOW <= TIMESLOT; iStart = iStart + TIMEWINDOW)
 		{
 			contraintes1Gare.clear();
 
-			for (int i = iStart; i < iStart + TIMEWINDOW; ++i)
+			for (int i = iStart; i < iStart + TIMEWINDOW && i < TIMESLOT; ++i)
 			{
 				for (int t = 0; t < TRAIN; ++t)
 				{
+					std::cout << "(t, i, g) = " << t << " " << i << " " << g << std::endl;
 					contraintes1Gare.push(Lit(dans_gare[t][i][g]));
 				}
 			}	
@@ -124,7 +122,7 @@ void setupContrainte1AllerGare(Graph *map){
 void setupContrainte1(Graph *map){
 	// Trajet entre toute paire de gares dans chaque timewindow
 	setupContrainte1FaireTrajet(map);
-	//setupContrainte1AllerGare(map);
+	// setupContrainte1AllerGare(map);
 }
 
 // end contrainte 1
@@ -417,6 +415,7 @@ void printRes() {
         std::cout << "-------" << std::endl;
         for (int t = 0; t < TRAIN; ++t) {
         	for (int g1 = 0; g1 < STATION; ++g1) {
+        		std::cout << "i: " << i << " t: " << t << " g1: " << g1 << std::endl;
                 if (solver.model[dans_gare[t][i][g1]] == l_True) {
                     std::cout << "Le train " << t << " est dans la gare " << g1 << std::endl;
 
@@ -506,9 +505,10 @@ int main() {
 	}
 	else {
 		printf("\nYES\n");
+		printRes();
 	}
 
-	printRes();
+	
 
 
 	// ---------- Delete ---------- //
