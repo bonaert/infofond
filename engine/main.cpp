@@ -62,7 +62,7 @@ bool isSmall(Graph* map, int gare) {
 }
 
 
-// contrainte1 
+// contrainte1
 
 vec<Lit> contraintes1Trajet;
 void setupContrainte1FaireTrajet(Graph *map){
@@ -89,7 +89,7 @@ void setupContrainte1FaireTrajet(Graph *map){
 						contraintes1Trajet.push(~Lit(sur_voie[t][i1][g1][g2]));
 						contraintes1Trajet.push(~Lit(sur_voie[t][i2][g1][g2]));
 					}
-				}				
+				}
 
 				solver.addClause(contraintes1Trajet);
 			}
@@ -112,9 +112,9 @@ void setupContrainte1AllerGare(Graph *map){
 					std::cout << "(t, i, g) = " << t << " " << i << " " << g << std::endl;
 					contraintes1Gare.push(Lit(dans_gare[t][i][g]));
 				}
-			}	
+			}
 
-			solver.addClause(contraintes1Gare);			
+			solver.addClause(contraintes1Gare);
 		}
 	}
 }
@@ -212,9 +212,9 @@ void setupContrainte5(Graph *map){
 			if (!voie_exists(map, g1, g2)) {
 				continue;
 			}
-				
+
 			travelDuration = map->get_duration(g1, g2);
-				
+
 			for (int t = 0; t < TRAIN; ++t)
 			{
 				for (int i = 0; i < TIMESLOT - travelDuration; ++i)
@@ -240,7 +240,7 @@ void makeContraintForEnsemble(Graph *map, int gare) {
 	ensembleConstraints.clear();
 	std::cout << "Train Ensemble:";
 	for (std::vector<int>::iterator train = combination.begin(); train != combination.end(); ++train)
-	{	
+	{
 		std::cout << " " << *train;
 		for (int i = 0; i < TIMESLOT; ++i)
 		{
@@ -272,10 +272,10 @@ void makeConstraintForGare(Graph *map, int gare) {
 	}
 
 	choices.clear();
-    for (int i = 0; i < TRAIN; ++i) { 
-    	choices.push_back(i); 
+    for (int i = 0; i < TRAIN; ++i) {
+    	choices.push_back(i);
     }
-  
+
 	makeConstraintFor6(map, gare, 0, k);
 }
 
@@ -285,7 +285,7 @@ void setupContrainte6(Graph* map){
 	{
 		makeConstraintForGare(map, g);
 	}
-	
+
 }
 
 // End contrainte6
@@ -298,18 +298,22 @@ void setupContrainteImplicite1(Graph *map){
 		for (int i = 0; i < TIMESLOT; ++i)
 		{
 			contraintesImplicites1.clear();
-			
+
 			for (int g1 = 0; g1 < STATION; ++g1)
 			{
 				for (int g2 = 0; g2 < STATION; ++g2)
 				{
 					if (g1 != g2 && voie_exists(map, g1, g2)) {
-						contraintesImplicites1.push(Lit(sur_voie[t][i][g1][g2]));	
+						contraintesImplicites1.push(Lit(sur_voie[t][i][g1][g2]));
 					}
 				}
-				contraintesImplicites1.push(Lit(dans_gare[t][i][g1]));
 			}
-			solver.addClause(contraintesImplicites1);
+
+			for (int g1 = 0; g1 < STATION; ++g1)
+			{
+				contraintesImplicites1.push(Lit(dans_gare[t][i][g1]));
+		  }
+		solver.addClause(contraintesImplicites1);
 		}
 	}
 
@@ -396,12 +400,66 @@ void setupContrainteImplicite4(Graph *map){
 	}
 }
 
-void setupContrainteImplicite5(Graph *map){
+vec<Lit> contraintesImplicites5;
+void setupContrainteImplicite5(Graph *map)
+{
+// 	Lorsqu’on sort d’un segment A-B, soit on arrive à gare B soit on est sur
+// un segment B-C
 
+		for (int g1 = 0; g1 < STATION; ++g1)
+		{
+			for (int g2 = 0; g2 < STATION; ++g2)
+			{
+				if (g1 == g2 || !voie_exists(map, g1, g2)) continue;
+				for (int t = 0; t < TRAIN; ++t)
+				{
+					for (int i = 1; i < TIMESLOT; ++i)
+					{
+						contraintesImplicites5.clear();
+						contraintesImplicites5.push(~Lit(sur_voie[t][i-1][g1][g2]));
+						contraintesImplicites5.push(Lit(sur_voie[t][i][g1][g2]));
+						contraintesImplicites5.push(Lit(dans_gare[t][i][g2]));
+
+						for (int g3 = 0; g3 < STATION; ++g3)
+						{
+							if (g2 == g3 || !voie_exists(map, g2, g3)) continue;
+							contraintesImplicites5.push(Lit(sur_voie[t][i][g2][g3]));
+						}
+						solver.addClause(contraintesImplicites5);
+					}
+				}
+			}
+		}
 }
 
+vec<Lit> contraintesImplicites6;
 void setupContrainteImplicite6(Graph *map){
-	
+	//Lorsqu’un train sort d’une gare A, il doit être sur un segment qui part de A
+
+
+	  for (int g1 = 0; g1 < STATION; ++g1)
+		{
+		    for (int t = 0; t < TRAIN; ++t)
+				{
+					  for (int i = 1; i < TIMESLOT; ++i) // TODO indices des i ?
+						{
+								contraintesImplicites6.clear();
+								contraintesImplicites6.push(~Lit(dans_gare[t][i-1][g1]));
+								contraintesImplicites6.push(Lit(dans_gare[t][i][g1]));
+
+								for (int g2 = 0; g2 < STATION; ++g2) // ??? si y a pas de gare liée
+								{
+										if (g1 == g2 || !voie_exists(map, g1, g2))
+										{
+											contraintesImplicites6.push(Lit(sur_voie[t][i][g1][g2]));
+										}
+								}
+								solver.addClause(contraintesImplicites6);
+						}
+				}
+
+
+	  }
 }
 
 
@@ -463,7 +521,7 @@ int main() {
 
 	// ---------- Variables ---------- //
 
-	
+
 	initVariables();
 
 
@@ -508,7 +566,7 @@ int main() {
 		printRes();
 	}
 
-	
+
 
 
 	// ---------- Delete ---------- //
