@@ -71,8 +71,32 @@ après une durée maximale de trajet $TravelDuration$, le tout en changeant pote
 ment de train au plus $NbChange$ fois. La version précédente du problème correspond
 au cas $NbChange=0$.
 
-\subsection{Proposer deux améliorations
-rendant le modèle plus réaliste.}
+\subsection{Proposer deux améliorations rendant le modèle plus réaliste.}
+
+\subsubsection{Faire que les time windows puissent se superposer}
+
+Si on permet aux time windows de se superposer (fenêtres glissantes), cela permet d'assurer un traffic plus fluide et efficace.
+
+Pour modéliser cette amélioration, il faut modifier la contrainte 1 de façon à ce que les time windows utilisées puissent se superposer. Voici la modélisation:
+
+   \begin{equation*}
+    \begin{split}
+      & 
+      \bigwedge_{(g,g'), g \neq g'} 
+      \bigwedge_{TimeWindow [i_s,i_e]}
+      \bigvee_{i \in [i_s,i_e]}
+      \bigvee_{i < i' \leq min(TimeSlots - 1, i + TravelDuration)}
+      \bigvee_{t}
+      \big[T_{t,i,g,i', g'}] \\
+    \end{split}
+    \end{equation*}
+    
+Les TimeWindows acceptées sont toutes les timeWindows tel que 
+$$0 <= i_s, i_e = i + TimeWindow < TimeSlots$$
+
+\subsubsection{Limiter la quantité de retard admise ou autoriser le retard}
+
+Il faut attendre la réponse de l'assistant.
 
 % TODO ne pas oublier d'expliquer comment les modéliser en SAT
 

@@ -1,5 +1,5 @@
 CC       =c++
-CCFLAGS  =-Wall
+CCFLAGS  =-Wall -std=c++11
 
 EXE      = Train
 DIR      = engine solver

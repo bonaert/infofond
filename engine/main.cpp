@@ -1,7 +1,11 @@
 #include "graph.hpp"
 #include "../solver/Solver.hpp"
+#include <sstream>
+#include <string>
 #include <iostream>
 #include <vector>
+
+// Slow Fast Map
 
 #define TIMEWAIT 3			// le temps d'attente minimum dans une gare desservie
 #define SLOW 2			// nombre de train lent
@@ -12,6 +16,20 @@
 #define TRAVELDURATION 3	// duree maximal des voyages direct
 #define TIMEWINDOW 10		// frequence des trains direct
 #define MAPFILE "maps/slow-fast.txt"
+
+
+// Cycle Map
+/*
+#define TIMEWAIT 3
+#define SLOW 1
+#define FAST 0
+#define TRAIN (SLOW+FAST)
+#define TIMESLOT 26
+#define STATION 4
+#define TRAVELDURATION 12
+#define TIMEWINDOW 14
+#define MAPFILE "maps/cycle.txt"
+*/
 
 
 int example_of_array[1];
@@ -76,9 +94,9 @@ void setupContrainte1(Graph* map) {
 			if (g1 == g2) continue;
 			
 			// Version non-glissante
-			// for (int twStart = 0; twStart < TIMESLOT - TIMEWINDOW - TRAVELDURATION; twStart = twStart + TIMEWINDOW)
-			// Version glissante
-			for (int twStart = 0; twStart < TIMESLOT - TIMEWINDOW - TRAVELDURATION; twStart++)
+			for (int twStart = 0; twStart < TIMESLOT - TIMEWINDOW; twStart = twStart + TIMEWINDOW)
+			// Amélioration 1: utiliser des time windows glissantes
+			// for (int twStart = 0; twStart < TIMESLOT - TIMEWINDOW - TRAVELDURATION; twStart++)
 			{
 				contraintes1.clear();
 
@@ -173,24 +191,24 @@ void setupContrainte4(Graph *map){
 			}
 		}
 	}
-
 }
 
 void setupContrainte5(Graph *map){
-	int travelDuration;
+	int voieDuration;
+	// On reste dans les gares voieDuration minutes
 	for (int g1 = 0; g1 < STATION; ++g1)
 	{
 		for (int g2 = 0; g2 < STATION; ++g2)
 		{
 			if (g1 == g2 || !voie_exists(map, g1, g2)) continue;
 
-			travelDuration = map->get_duration(g1, g2);
+			voieDuration = map->get_duration(g1, g2);
 
 			for (int t = 0; t < TRAIN; ++t)
 			{
-				for (int i = 0; i < TIMESLOT - travelDuration; ++i)
+				for (int i = 0; i < TIMESLOT - voieDuration; ++i)
 				{
-					for (int i2 = i + 1; i2 < i + travelDuration; ++i2)
+					for (int i2 = i + 1; i2 < i + voieDuration; ++i2)
 					{
 						solver.addTernary(Lit(sur_voie[t][i - 1][g1][g2]), ~Lit(sur_voie[t][i][g1][g2]), Lit(sur_voie[t][i2][g1][g2]));
 					}
@@ -434,16 +452,7 @@ void setupContrainteImplicite6(Graph *map){
 }
 
 
-void printRes(Graph* map) {
-	std::cout << "TIMEWAIT " << TIMEWAIT << std::endl;
-	std::cout << "SLOW " << SLOW << std::endl;
-	std::cout << "FAST " << FAST << std::endl;
-	std::cout << "TRAIN " << TRAIN << std::endl;
-	std::cout << "TIMESLOT " << TIMESLOT << std::endl;
-	std::cout << "STATION " << STATION << std::endl;
-	std::cout << "TRAVELDURATION " << TRAVELDURATION << std::endl;
-	std::cout << "TIMEWINDOW " << TIMEWINDOW << std::endl << std::endl;
-
+void printTrainMovements(Graph* map) {
 	for (int t = 0; t < TRAIN; ++t)
 	{
 		std::cout << "Train number " << t;
@@ -469,6 +478,51 @@ void printRes(Graph* map) {
 		}
 		std::cout << std::endl;
 	}
+}
+
+void printGeneralInfo() {
+	std::cout << "TIMEWAIT " << TIMEWAIT << std::endl;
+	std::cout << "SLOW " << SLOW << std::endl;
+	std::cout << "FAST " << FAST << std::endl;
+	std::cout << "TRAIN " << TRAIN << std::endl;
+	std::cout << "TIMESLOT " << TIMESLOT << std::endl;
+	std::cout << "STATION " << STATION << std::endl;
+	std::cout << "TRAVELDURATION " << TRAVELDURATION << std::endl;
+	std::cout << "TIMEWINDOW " << TIMEWINDOW << std::endl << std::endl << std::endl;
+}
+
+
+void printTravels(Graph* map) {
+	std::cout << "Print train movements (to easily examine whether timeWindow rules are respected";
+	std::cout << std::endl << std::endl;
+
+	for (int t = 0; t < TRAIN; ++t)
+	{
+		for (int i1 = 0; i1 < TIMESLOT; ++i1)
+		{
+			for (int i2 = i1 + 1; i2 < TIMESLOT; ++i2)
+			{
+				for (int g1 = 0; g1 < STATION; ++g1)
+				{
+					for (int g2 = 0; g2 < STATION; ++g2)
+					{
+						if (solver.model[fait_trajet[t][i1][g1][i2][g2]] == l_True) {
+                            std::cout << map->get_name(g1) << ":" << i1 << " -- t" 
+                                      << t << " -- " << i2 << ":" << g2 << std::endl;
+                        }
+					}
+				}
+			}
+		}
+	}
+	std::cout << std::endl << std::endl;
+}
+
+void printRes(Graph* map) {
+	printGeneralInfo();
+	printTravels(map);
+	printTrainMovements(map);
+	
 }
 
 /**
@@ -535,6 +589,28 @@ void setupContraintesPourUtiliserDerniereVariable(){
 }
 
 
+void setupContrainteJamaisRetard(Graph* map){
+	int voieDuration;
+	// Après voieDuration minutes, on n'est plus sur la voie
+	for (int g1 = 0; g1 < STATION; ++g1)
+	{
+		for (int g2 = 0; g2 < STATION; ++g2)
+		{
+			if (g1 == g2 || !voie_exists(map, g1, g2)) continue;
+
+			voieDuration = map->get_duration(g1, g2);
+
+			for (int t = 0; t < TRAIN; ++t)
+			{
+				for (int i = 0; i < TIMESLOT - voieDuration - 1; ++i)
+				{
+					solver.addTernary(Lit(sur_voie[t][i - 1][g1][g2]), ~Lit(sur_voie[t][i][g1][g2]), ~Lit(sur_voie[t][i + voieDuration][g1][g2]));
+				}
+			}
+		}
+	}
+}
+
 int main() {
 	// ---------- Map ---------- //
 
@@ -573,6 +649,9 @@ int main() {
 
 	setupContraintesPourUtiliserDerniereVariable();
 
+	// Amelioration 2: si on enleve ca, on autorise du retard, pour mieux simuler la SNCB
+	// setupContrainteJamaisRetard(map);
+
 
 
 
@@ -592,7 +671,7 @@ int main() {
 		printf("\nNO\n");
 	}
 	else {
-		printf("\nYES\n");
+		printf("\nFound a solution\n\n\n");
 		printRes(map);
 	}
 
