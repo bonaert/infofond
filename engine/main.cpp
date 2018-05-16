@@ -4,13 +4,14 @@
 #include <vector>
 
 #define TIMEWAIT 3			// le temps d'attente minimum dans une gare desservie
-#define SLOW 1				// nombre de train lent
-#define FAST 0				// nombre de train rapide
+#define SLOW 2			// nombre de train lent
+#define FAST 1				// nombre de train rapide
 #define TRAIN (SLOW+FAST)	// nombre de train
-#define TIMESLOT 30			// nombre de minutes dans la plage horaire
+#define TIMESLOT 26			// nombre de minutes dans la plage horaire
 #define STATION 3			// nombre de gare (voir la map)
-#define TIMEDURATION 5		// duree maximal des voyages direct
-#define TIMEWINDOW 5		// frequence des trains direct
+#define TRAVELDURATION 3	// duree maximal des voyages direct
+#define TIMEWINDOW 10		// frequence des trains direct
+#define MAPFILE "maps/slow-fast.txt"
 
 
 int example_of_array[1];
@@ -19,19 +20,24 @@ vec<Lit> literals;
 
 int dans_gare[TRAIN][TIMESLOT][STATION];
 int sur_voie[TRAIN][TIMESLOT][STATION][STATION];
+int fait_trajet[TRAIN][TIMESLOT][STATION][TIMESLOT][STATION];
 
 void initVariables () {
-	for (int i = 0; i < TRAIN; ++i)
+	for (int t = 0; t < TRAIN; ++t)
 	{
-		for (int j = 0; j < TIMESLOT; ++j)
+		for (int i1 = 0; i1 < TIMESLOT; ++i1)
 		{
-			for (int k = 0; k < STATION; ++k)
+			for (int g1 = 0; g1 < STATION; ++g1)
 			{
-				for (int l = 0; l < STATION; ++l)
+				for (int g2 = 0; g2 < STATION; ++g2)
 				{
-					sur_voie[i][j][k][l] = solver.newVar();
+					sur_voie[t][i1][g1][g2] = solver.newVar();
+					for (int i2 = 0; i2 < TIMESLOT; ++i2)
+					{
+						fait_trajet[t][i1][g1][i2][g2] = solver.newVar();
+					}
 				}
-				dans_gare[i][j][k] = solver.newVar();
+				dans_gare[t][i1][g1] = solver.newVar();
 			}
 		}
 	}
@@ -44,15 +50,6 @@ bool voie_exists(Graph* map, int i, int k) {
 	return map->get_duration(i, k) > 0;
 }
 
-
-// useless
-void constraint_AB (Graph *map) {
-	literals.clear();
-	literals.push(Lit(example_of_array[0]));
-	solver.addClause(literals);
-}
-
-
 bool isFast(int t){
 	return SLOW <= t && t < TRAIN;
 }
@@ -64,65 +61,41 @@ bool isSmall(Graph* map, int gare) {
 
 // contrainte1
 
-vec<Lit> contraintes1Trajet;
-void setupContrainte1FaireTrajet(Graph *map){
-	int i2;
+
+/**
+ * Pour toute paire de gare (g, g'), pour chaque fenêtre horaire de durée TimeWindow,
+ * il existe un train qui dessert g dans cette fenêtre, puis, plus tard, ce même train
+ * desservira g 0 , après une durée de trajet d’au plus TravelDuration.
+ */
+vec<Lit> contraintes1;
+void setupContrainte1(Graph* map) {
 	for (int g1 = 0; g1 < STATION; ++g1)
 	{
 		for (int g2 = 0; g2 < STATION; ++g2)
 		{
-			for (int iStart = 0; iStart <= TIMESLOT - TIMEWINDOW; iStart = iStart + TIMEWINDOW)
+			if (g1 == g2) continue;
+			
+			// Version non-glissante
+			// for (int twStart = 0; twStart < TIMESLOT - TIMEWINDOW - TRAVELDURATION; twStart = twStart + TIMEWINDOW)
+			// Version glissante
+			for (int twStart = 0; twStart < TIMESLOT - TIMEWINDOW - TRAVELDURATION; twStart++)
 			{
-				contraintes1Trajet.clear();
+				contraintes1.clear();
 
-				for (int i1 = iStart; i1 < iStart + TIMEWINDOW && iStart < TIMESLOT; ++i1)
-				{
-					i2 = i1 + map->get_duration(g1, g2);
-
-					if (i2 >= TIMESLOT) {
-						break;
-					}
-
-
-					for (int t = 0; t < TRAIN; ++t)
+				for (int i1 = twStart; i1 < twStart + TIMEWINDOW && i1 < TIMESLOT; ++i1) {
+					for (int i2 = i1 + 1; i2 <= i1 + TRAVELDURATION && i2 < TIMESLOT; ++i2)
 					{
-						contraintes1Trajet.push(~Lit(sur_voie[t][i1][g1][g2]));
-						contraintes1Trajet.push(~Lit(sur_voie[t][i2][g1][g2]));
+						for (int t = 0; t < TRAIN; ++t)
+						{
+							contraintes1.push(Lit(fait_trajet[t][i1][g1][i2][g2]));
+						}
 					}
 				}
 
-				solver.addClause(contraintes1Trajet);
-			}
+				solver.addClause(contraintes1);
+			}	
 		}
 	}
-}
-
-vec<Lit> contraintes1Gare;
-void setupContrainte1AllerGare(Graph *map){
-	for (int g = 0; g < STATION; ++g)
-	{
-		for (int iStart = 0; iStart + TIMEWINDOW <= TIMESLOT; iStart = iStart + TIMEWINDOW)
-		{
-			contraintes1Gare.clear();
-
-			for (int i = iStart; i < iStart + TIMEWINDOW && i < TIMESLOT; ++i)
-			{
-				for (int t = 0; t < TRAIN; ++t)
-				{
-					std::cout << "(t, i, g) = " << t << " " << i << " " << g << std::endl;
-					contraintes1Gare.push(Lit(dans_gare[t][i][g]));
-				}
-			}
-
-			solver.addClause(contraintes1Gare);
-		}
-	}
-}
-
-void setupContrainte1(Graph *map){
-	// Trajet entre toute paire de gares dans chaque timewindow
-	setupContrainte1FaireTrajet(map);
-	// setupContrainte1AllerGare(map);
 }
 
 // end contrainte 1
@@ -209,9 +182,7 @@ void setupContrainte5(Graph *map){
 	{
 		for (int g2 = 0; g2 < STATION; ++g2)
 		{
-			if (!voie_exists(map, g1, g2)) {
-				continue;
-			}
+			if (g1 == g2 || !voie_exists(map, g1, g2)) continue;
 
 			travelDuration = map->get_duration(g1, g2);
 
@@ -219,7 +190,7 @@ void setupContrainte5(Graph *map){
 			{
 				for (int i = 0; i < TIMESLOT - travelDuration; ++i)
 				{
-					for (int i2 = 0; i2 < i + travelDuration; ++i2)
+					for (int i2 = i + 1; i2 < i + travelDuration; ++i2)
 					{
 						solver.addTernary(Lit(sur_voie[t][i - 1][g1][g2]), ~Lit(sur_voie[t][i][g1][g2]), Lit(sur_voie[t][i2][g1][g2]));
 					}
@@ -312,8 +283,9 @@ void setupContrainteImplicite1(Graph *map){
 			for (int g1 = 0; g1 < STATION; ++g1)
 			{
 				contraintesImplicites1.push(Lit(dans_gare[t][i][g1]));
-		  }
-		solver.addClause(contraintesImplicites1);
+		    }
+			
+			solver.addClause(contraintesImplicites1);
 		}
 	}
 
@@ -323,8 +295,10 @@ void setupContrainteImplicite2(Graph *map){
 	// Un train ne peut pas être dans 2 gares différentes au même moment
 	for (int g1 = 0; g1 < STATION; ++g1)
 	{
-		for (int g2 = g1 + 1; g2 < STATION; ++g2)
+		for (int g2 = 0; g2 < STATION; ++g2)
 		{
+			if (g1 == g2) continue;
+
 			for (int i = 0; i < TIMESLOT; ++i)
 			{
 				for (int t = 0; t < TRAIN; ++t)
@@ -337,7 +311,7 @@ void setupContrainteImplicite2(Graph *map){
 }
 
 void setupContrainteImplicite3(Graph *map){
-	// Un train ne peut pas être sur 2 segment différents au même moment
+	// Un train ne peut pas être sur 2 voies différents au même moment
 	for (int g1 = 0; g1 < STATION; ++g1)
 	{
 		for (int g2 = 0; g2 < STATION; ++g2)
@@ -377,22 +351,22 @@ void setupContrainteImplicite3(Graph *map){
 
 void setupContrainteImplicite4(Graph *map){
 	// Un train ne peut pas être sur un segment et une gare au même moment
-	for (int g1 = 0; g1 < STATION; ++g1)
+	for (int g2 = 0; g2 < STATION; ++g2)
 	{
-		for (int g2 = 0; g2 < STATION; ++g2)
+		for (int g3 = 0; g3 < STATION; ++g3)
 		{
-			if (g1 == g2 || !voie_exists(map, g1, g2)) {
+			if (g2 == g3 || !voie_exists(map, g2, g3)) {
 				// Voie n'existe pas
 				continue;
 			}
 
-			for (int g3 = 0; g3 < STATION; ++g3)
+			for (int g1 = 0; g1 < STATION; ++g1)
 			{
 				for (int i = 0; i < TIMESLOT; ++i)
 				{
 					for (int t = 0; t < TRAIN; ++t)
 					{
-						solver.addBinary(~Lit(dans_gare[t][i][g3]), ~Lit(sur_voie[t][i][g1][g2]));
+						solver.addBinary(~Lit(dans_gare[t][i][g1]), ~Lit(sur_voie[t][i][g2][g3]));
 					}
 				}
 			}
@@ -437,87 +411,139 @@ void setupContrainteImplicite6(Graph *map){
 	//Lorsqu’un train sort d’une gare A, il doit être sur un segment qui part de A
 
 
-	  for (int g1 = 0; g1 < STATION; ++g1)
+	for (int g1 = 0; g1 < STATION; ++g1)
+	{
+    	for (int t = 0; t < TRAIN; ++t)
 		{
-		    for (int t = 0; t < TRAIN; ++t)
+		    for (int i = 1; i < TIMESLOT; ++i)
+			{
+				contraintesImplicites6.clear();
+				contraintesImplicites6.push(~Lit(dans_gare[t][i-1][g1]));
+				contraintesImplicites6.push(Lit(dans_gare[t][i][g1]));
+
+				for (int g2 = 0; g2 < STATION; ++g2) // ??? si y a pas de gare liée
 				{
-					  for (int i = 1; i < TIMESLOT; ++i) // TODO indices des i ?
-						{
-								contraintesImplicites6.clear();
-								contraintesImplicites6.push(~Lit(dans_gare[t][i-1][g1]));
-								contraintesImplicites6.push(Lit(dans_gare[t][i][g1]));
-
-								for (int g2 = 0; g2 < STATION; ++g2) // ??? si y a pas de gare liée
-								{
-										if (g1 == g2 || !voie_exists(map, g1, g2))
-										{
-											contraintesImplicites6.push(Lit(sur_voie[t][i][g1][g2]));
-										}
-								}
-								solver.addClause(contraintesImplicites6);
-						}
+						if (g1 == g2 || !voie_exists(map, g1, g2)) continue;
+						
+						contraintesImplicites6.push(Lit(sur_voie[t][i][g1][g2]));
 				}
-
-
-	  }
+				solver.addClause(contraintesImplicites6);
+			}
+		}
+	}
 }
 
 
-void printResults(){
+void printRes(Graph* map) {
+	std::cout << "TIMEWAIT " << TIMEWAIT << std::endl;
+	std::cout << "SLOW " << SLOW << std::endl;
+	std::cout << "FAST " << FAST << std::endl;
+	std::cout << "TRAIN " << TRAIN << std::endl;
+	std::cout << "TIMESLOT " << TIMESLOT << std::endl;
+	std::cout << "STATION " << STATION << std::endl;
+	std::cout << "TRAVELDURATION " << TRAVELDURATION << std::endl;
+	std::cout << "TIMEWINDOW " << TIMEWINDOW << std::endl << std::endl;
 
-}
-
-void printRes() {
-	for (int i = 0; i < TIMESLOT; ++i) {
-        std::cout << "Time = " << i << std::endl;
-        std::cout << "-------" << std::endl;
-        for (int t = 0; t < TRAIN; ++t) {
-        	for (int g1 = 0; g1 < STATION; ++g1) {
-        		std::cout << "i: " << i << " t: " << t << " g1: " << g1 << std::endl;
-                if (solver.model[dans_gare[t][i][g1]] == l_True) {
-                    std::cout << "Le train " << t << " est dans la gare " << g1 << std::endl;
-
+	for (int t = 0; t < TRAIN; ++t)
+	{
+		std::cout << "Train number " << t;
+		if (isFast(t)) {
+			std::cout << " (fast)";
+		} else {
+			std::cout << " (slow)";
+		}
+		std::cout << std::endl; 
+		for (int g = 0; g < STATION; ++g)
+		{
+			std::cout << map->get_name(g);
+			std::cout << " |";
+			for (int i = 0; i < TIMESLOT; ++i)
+			{
+				if (solver.model[dans_gare[t][i][g]] == l_True) {
+                    std::cout << "X";
+                } else {
+                	std::cout << "-";
                 }
-
-                for (int g2 = 0; g2 < STATION; ++g2)  {
-                    if (solver.model[sur_voie[t][i][g1][g2]] == l_True) {
-                        std::cout << "Le train " << t << " est sur le segment entre la gare "
-                                  << g1 << " et " << g2 << std::endl;
-
-                    }
-                }
-            }
-
-        }
-        std::cout << std::endl;
-    }
+			}
+			std::cout << '|' << std::endl;
+		}
+		std::cout << std::endl;
+	}
 }
 
+/**
+ * vérifier que  un déplacement d'une gare 1 à 2 en un temps TD correpond bien a un voyage
+ */
+void setupContrainte1PourUtiliserDerniereVariable() {
+	for (int t = 0; t < TRAIN; ++t)
+	{
+		for (int g1 = 0; g1 < STATION; ++g1)
+		{
+			for (int g2 = 0; g2 < STATION; ++g2)
+			{
+				if (g1 == g2) continue;
+
+				for (int i1 = 0; i1 < TIMESLOT; ++i1)
+				{
+					for (int i2 = i1 + 1; i2 < TIMESLOT; ++i2)
+					{
+                        solver.addBinary(~Lit(fait_trajet[t][i1][g1][i2][g2]), Lit(dans_gare[t][i1][g1]));
+                        solver.addBinary(~Lit(fait_trajet[t][i1][g1][i2][g2]), Lit(dans_gare[t][i2][g2]));
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
+
+/**
+ * vérifier que un voyage correpond bien a un déplacement d'une gare 1 à 2 en un temps TD
+ */
+vec<Lit> contraintesNewVar;
+void setupContrainte2PourUtiliserDerniereVariable() {
+	for (int t = 0; t < TRAIN; ++t)
+	{
+		for (int g1 = 0; g1 < STATION; ++g1)
+		{
+			for (int g2 = 0; g2 < STATION; ++g2)
+			{
+				if (g1 == g2) continue;
+
+				for (int i1 = 0; i1 < TIMESLOT; ++i1)
+				{
+					for (int i2 = i1 + 1; i2 < TIMESLOT; ++i2)
+					{
+						contraintesNewVar.clear();
+						contraintesNewVar.push(~Lit(dans_gare[t][i1][g1]));
+						contraintesNewVar.push(~Lit(dans_gare[t][i2][g2]));
+                        contraintesNewVar.push(Lit(fait_trajet[t][i1][g1][i2][g2]));
+                        solver.addClause(contraintesNewVar);
+                        
+					}
+				}
+			}
+		}
+	}
+}
+
+void setupContraintesPourUtiliserDerniereVariable(){
+	setupContrainte1PourUtiliserDerniereVariable();
+	setupContrainte2PourUtiliserDerniereVariable();
+}
 
 
 int main() {
 	// ---------- Map ---------- //
 
 	Graph* map;
-	map = Graph::parse((char *)"maps/slow-fast.txt"); // you can change the map file here !!
+	map = Graph::parse((char *) MAPFILE); // you can change the map file here !!
 	map->print();
 	assert(STATION == map->get_size());
 
 	// ---------- Outputs ---------- //
-
-	std::cout << "The number of slow trains is " << SLOW << std::endl;
-	std::cout << "The number of fast trains is " << FAST << std::endl;
-
-	for (int i = 0; i < STATION; ++i)
-	{
-		std::cout << "Station " << map->get_name(i) << " " << i << " with capacity " << map->get_capacity(i) << std::endl;
-		for (int j = 0; j < STATION; ++j)
-		{
-			if (map->get_duration(i, j) > 0) {
-				std::cout << "    Distance from " << i << " to " << j << " is " << map->get_duration(i, j) << std::endl;
-			}
-		}
-	}
 
 	// ---------- Variables ---------- //
 
@@ -527,13 +553,14 @@ int main() {
 
 
 	// ---------- Constraints ---------- //
-
+ 	
 	setupContrainte1(map);
 	setupContrainte2(map);
 	setupContrainte3(map);
 	setupContrainte4(map);
 	setupContrainte5(map);
 	setupContrainte6(map);
+	
 
 	std::cout << "Adding implicit clauses"  << std::endl;
 
@@ -543,6 +570,9 @@ int main() {
 	setupContrainteImplicite4(map);
 	setupContrainteImplicite5(map);
 	setupContrainteImplicite6(map);
+
+	setupContraintesPourUtiliserDerniereVariable();
+
 
 
 
@@ -563,7 +593,7 @@ int main() {
 	}
 	else {
 		printf("\nYES\n");
-		printRes();
+		printRes(map);
 	}
 
 
