@@ -1,0 +1,210 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+
+\begin{document}
+ \begin{equation*}
+\bigvee_{a \in \{1, 2, 3\}}
+\bigvee_{b \in \{7, 8\}}
+c_{a, b}
+\end{equation*}
+
+\begin{equation*}
+c_{1, 7} \lor
+c_{1, 8} \lor
+c_{2, 7} \lor
+c_{2, 8} \lor
+c_{3, 7} \lor
+c_{3, 8} 
+\end{equation*}
+
+
+
+
+
+\section{Contraintes Explicites}
+
+\begin{itemize}
+
+\item Contrainte 1
+    \begin{equation*}
+    \begin{split}
+      & \big(\bigwedge_{(g,g'), g \neq g'} 
+      \bigwedge_{TimeWindow [i_s,i_e] non-glissante}
+      \bigvee_{i, i' = i+TravelDuration \in [i_s,i_e] }
+      \bigvee_{t}
+      \big[\neg G_{t,i,g} \lor G_{t,i',g'} \big] \big)\\
+      \land \\
+      &\big(\bigwedge_{TimeWindow:[i_s,i_e]}
+      \big[\bigvee_{g, t, i \in TimeWindow} G_{t, i, g} \big]\big) \\
+    \end{split}
+    \end{equation*}
+    
+\item Contrainte 1 - v2
+    \begin{equation*}
+    \begin{split}
+      & 
+      \bigwedge_{(g,g'), g \neq g'} 
+      \bigwedge_{TimeWindow [i_s,i_e]}
+      \bigvee_{i \in [i_s,i_e]}
+      \bigvee_{i < i' \leq min(TimeSlots - 1, i + TravelDuration)}
+      \bigvee_{t}
+      \big[T_{t,i,g,i', g'}] \\
+    \end{split}
+    \end{equation*}
+
+Les Time Windows utilisées sont non-glissantes (elles ne se superposent pas).
+    
+\item Contrainte 2
+    \begin{equation*}
+    \begin{split}
+      & \bigwedge_{t_1 \neq t_2}
+      \bigwedge_{i}
+      \bigwedge_{(g,g'), g \neq g'} \big[
+      \neg V_{t_1,i,(g,g')} \lor \neg V_{t_2,i,(g,g')} \big] \\
+    \end{split}
+    \end{equation*}
+    
+\item Contrainte 3
+    \begin{equation*}
+    \begin{split}
+      & \bigwedge_{t}
+      \bigwedge_{i}
+      \bigwedge_{(g_1,g_2), (g_2, g_3)}  \big[
+      \neg V_{t,i,(g_1,g_2)} \lor \neg V_{t,i+1,(g_2,g_3)} \lor (Rapide(t) \land Petite(g_2) \big] \\
+    \end{split}
+    \end{equation*}
+    
+\item Contrainte 4
+    \begin{equation*}
+    \begin{split}
+      & \bigwedge_{t, g, i} \big[
+      \big(G_{g, t, i-1} \lor \neg G_{g, t, i} \big)
+      \lor 
+      \big(\bigwedge_{i+1 \leq i_2<i+TWait} G_{g, t, i_2} \big) \big] \\
+    \end{split}
+    \end{equation*}
+    
+\item Contrainte 4 (équivalent en FNC)
+    \begin{equation*}
+    \begin{split}
+      & \bigwedge_{t, g, i} \bigwedge_{i+1 \leq i_2<i+TWait} \big[
+      \big(G_{g, t, i-1} \lor \neg G_{g, t, i} \lor G_{g, t, i_2} \big) \\
+    \end{split}
+    \end{equation*}
+
+\item Contrainte 5
+    \begin{equation*}
+    \begin{split}
+      & \bigwedge_{(g_1, g_2), t, i} \big[ V((g_1, g_2), t, i-1) \lor \neg V((g_1, g_2), t, i) \big]  \\
+      & \lor\\
+      & \big[ \bigwedge_{i+1<=i_2<i+TravelDuration} V((g_1, g_2), t, i_2) \big]
+    \end{split}
+    \end{equation*}
+    
+  
+\item Contrainte 5 (équivalent en FNC)
+    \begin{equation*}
+    \begin{split}
+      & \bigwedge_{(g_1, g_2), t, i} \bigwedge_{i+1<=i_2<i+TravelDuration} \big[ V((g_1, g_2), t, i-1) \lor \neg V((g_1, g_2), t, i) \lor V((g_1, g_2), t, i_2)\big] \\
+    \end{split}
+    \end{equation*}
+    
+\item Contrainte 6
+
+    \begin{equation*}
+    \begin{split}
+        & \bigwedge_{g, i} \bigwedge_{Ensemble De Trains E \{t_1, t_2, \cdot, t_{cg}, t_{c_g+1}\}} \bigvee_{t \in E} \neg G_{t, g, i}
+    \end{split}
+    \end{equation*}
+
+
+
+
+\section{Contraintes Implicites}
+
+\item Contrainte 1 : Tout train doit être quelque part
+
+\begin{equation*}
+    \begin{split}
+      & \bigwedge_{t, i}
+      \big[\bigvee_{g} \big(G_{g, i, t} \big) \lor \bigvee_{(g_1, g_2)} \big(V_{(g_1, g_2) i, t} \big) \big] \\
+    \end{split}
+    \end{equation*}
+
+
+\item Contrainte 2 : Un train ne peut pas être dans 2 gares différentes au même moment
+
+\begin{equation*}
+    \begin{split}
+      & \bigwedge_{g_1, g_2, i>0, t, g_1 \neq g_2 }
+      \big[\neg G_{g_1, i, t} \lor \neg G_{g_2, i, t} \big] \\
+    \end{split}
+    \end{equation*}
+    
+\item Contrainte 3 :Un train ne peut pas être sur 2 segment différents au même moment
+
+\begin{equation*}
+    \begin{split}
+      & \bigwedge_{(g_1, g_2), (g_3, g_4), i>0, t, g_1 \neq g_3, g_2 \neq g_4 }
+      \big[\neg V_{(g_1, g_2), i, t} \lor \neg V_{(g_3, g_4), i, t} \big] \\
+    \end{split}
+    \end{equation*}
+
+\item Contrainte 4 :Un train ne peut pas être sur un segment et une gare au même moment
+
+\begin{equation*}
+    \begin{split}
+      & \bigwedge_{(g_1, (g_2, g_3), i>0, t}
+      \big[\neg G_{g_1, i, t} \lor \neg V_{(g_2, g_3), i, t} \big] \\
+    \end{split}
+    \end{equation*}
+
+
+\item Contrainte 5 : Lorsqu'on sort d'un segment A-B, soit on arrive à gare B soit on est sur un segment B-C
+
+\begin{equation*}
+    \begin{split}
+      & \bigwedge_{(g_1, g_2), t, i}
+      \big[
+      \big(\neg V_{(g_1, g_2), i-1, t} \lor V_{(g_1, g_2), i, t} \big)
+      \lor
+      \big(G_{g_2, t, i} \lor \bigvee_{g_3,\ g_3\ \text{liée à}\ g_2} \big(V_{(g_2, g_3), i, t}\big) \big)
+      \big]
+      \end{split}
+    \end{equation*}
+
+
+\item Contrainte 6 :Lorsqu'un train sort d'une gare A, il doit être sur un segment qui part de A
+
+\begin{equation*}
+    \begin{split}
+      & \bigwedge_{g_1, t, i}
+      \big[
+      \big(\neg G_{g_1, i-1, t} \lor G_{(g_1, i, t} \big)
+      \lor
+      \big(\bigvee_{g_2,\ g_1\ \text{liée à}\ g_2} V_{(g_1, g_2), i, t}\big) 
+      \big]\\
+    \end{split}
+    \end{equation*}
+    
+\item Contrainte 7 : contraintes pour cohérence de la variable T (partie 1)
+\begin{equation*}
+    \begin{split}
+      & \bigwedge_{t, g, g', i, i', g \neq g', i < i'}
+      (\neg T_{t,i,g,i', g'} \lor G_{g, i, t} ) \land (\neg T_{t,i,g,i', g'} \lor  G_{g', i', t} )\\
+    \end{split}
+    \end{equation*}
+
+\item Contrainte 8 : contraintes pour cohérence de la variable T (partie 2)
+\begin{equation*}
+    \begin{split}
+      & \bigwedge_{t, g, g', i, i', g \neq g', i < i'}
+      \neg G_{g, i, t} \lor \neg G_{(g', i', t} \lor T_{t,i,g,i', g'} \\
+    \end{split}
+    \end{equation*}
+
+
+\end{itemize}
+\end{document}
