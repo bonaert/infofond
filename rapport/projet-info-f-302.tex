@@ -247,7 +247,19 @@ $$0 <= i_s, i_e = i + TimeWindow < TimeSlots$$
 
 Par défaut on autorise un retard illimité sur les voies, ce qui n'est pas très réaliste. Pour améliorer cela, on autorise au maximum 100\% de retard. Par exemple, si il faut 20 minutes pour parcourrir une voie, on autorise au maximum un temps de trajet de 40 minutes.
 
-Voici la contrainte qui modélise cette amélioration: 
+Autrement dit, si la voie a comme temps de trajet minimum TravelDuration, le train peut rester au maximum 2 x TravelDuration sur la voie. Voici la contrainte qui modélise cette amélioration: 
+
+\begin{equation*}
+    \begin{split}
+      & \bigwedge_{(g_1, g_2), i > 0, t} 
+        \bigwedge_{i+1\leq i_2<i+TravelDuration} 
+        \big( \neg V_{g_1, g_2, t, i-1} \land  V_{g_1, g_2, t, i}\big)
+        \implies   
+        \neg \big( 
+        \bigwedge_{i + 1 < i' \leq i + 2 * TravelDuration} 
+        V_{g_1, g_2, t, i'} \big) \\
+    \end{split}
+    \end{equation*}
 
 
 
