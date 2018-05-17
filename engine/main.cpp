@@ -3,9 +3,11 @@
 #include <sstream>
 #include <string>
 #include <iostream>
+#include <algorithm>
 #include <vector>
 
 // Slow Fast Map
+
 
 #define TIMEWAIT 3			// le temps d'attente minimum dans une gare desservie
 #define SLOW 2			// nombre de train lent
@@ -30,7 +32,6 @@
 #define TIMEWINDOW 14
 #define MAPFILE "maps/cycle.txt"
 */
-
 
 int example_of_array[1];
 Solver solver;
@@ -225,47 +226,34 @@ std::vector<int> combination;
 std::vector<int> choices;
 vec<Lit> ensembleConstraints;
 
-void makeContraintForEnsemble(Graph *map, int gare) {
+void makeContraintForEnsemble(Graph *map, int gare, std::string bitmask, int i) {
 	ensembleConstraints.clear();
-	std::cout << "Train Ensemble:";
-	for (std::vector<int>::iterator train = combination.begin(); train != combination.end(); ++train)
-	{
-		std::cout << " " << *train;
-		for (int i = 0; i < TIMESLOT; ++i)
-		{
-			ensembleConstraints.push(~Lit(dans_gare[*train][i][gare]));
-		}
-	}
-	std::cout << std::endl;
-	solver.addClause(ensembleConstraints);
-}
-
-void makeConstraintFor6(Graph *map, int gare, int offset, int k) {
-  if (k == 0) {
-    makeContraintForEnsemble(map, gare);
-    return;
-  }
-  for (int i = offset; i <= (int) choices.size() - k; ++i) {
-    combination.push_back(choices[i]);
-    makeConstraintFor6(map, gare, i+1, k-1);
-    combination.pop_back();
-  }
+	for (int t = 0; t < TRAIN; ++t)
+    {
+        if (bitmask[t]) {
+        	ensembleConstraints.push(~Lit(dans_gare[t][i][gare]));
+        }
+    }
+    solver.addClause(ensembleConstraints);
+        
 }
 
 void makeConstraintForGare(Graph *map, int gare) {
 	int capacity = map->get_capacity(gare);
-	int n = TRAIN, k = capacity + 1;
-
-	if (n <= k) {
+	if (TRAIN <= capacity) {
 		return;
 	}
 
-	choices.clear();
-    for (int i = 0; i < TRAIN; ++i) {
-    	choices.push_back(i);
-    }
+	int N = TRAIN, K = capacity + 1;
+	std::string bitmask(K, 1); // K leading 1's
+    bitmask.resize(N, 0); // N-K trailing 0's
 
-	makeConstraintFor6(map, gare, 0, k);
+    do {
+    	for (int i = 0; i < TIMESLOT; ++i)
+    	{
+    		makeContraintForEnsemble(map, gare, bitmask, i);
+    	}
+    } while (std::prev_permutation(bitmask.begin(), bitmask.end()));
 }
 
 void setupContrainte6(Graph* map){
