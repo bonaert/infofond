@@ -40,9 +40,17 @@ La variable booléenne $fait\_trajet$
 
 \section{Formules des contraintes}
 
-\subsection{Contraines explicites}
-\begin{itemize}
 
+\begin{itemize}
+\item i est un instant, qui respecte toujours $0 \leq i < TimeSlots$
+\item g est une gare
+\item t est un train
+\item $c_g$ est la capacité de la gare g
+\end{itemize}
+
+\subsection{Contraines explicites}
+
+\begin{itemize}
 
 \item{Pour toute paire de gare (g, g'), pour chaque fenêtre horaire de durée TimeWindow,
 il existe un train qui dessert g dans cette fenêtre, puis, plus tard, ce même train
@@ -93,7 +101,9 @@ le faire durant une durée d’au moins TimeWait.}
 
     \begin{equation*}
     \begin{split}
-      & \bigwedge_{t, g, i} \bigwedge_{i+1 \leq i_2<i+TWait} \big[
+      & 
+      \bigwedge_{t, g, i > 0} 
+      \bigwedge_{i+1 \leq i_2<i+TWait} \big[
       \big(G_{g, t, i-1} \lor \neg G_{g, t, i} \lor G_{g, t, i_2} \big) \\
     \end{split}
     \end{equation*}
@@ -103,7 +113,10 @@ gares. On supposera constant, les temps de trajet entre deux gares, ils seront d
 
     \begin{equation*}
     \begin{split}
-      & \bigwedge_{(g_1, g_2), t, i} \bigwedge_{i+1<=i_2<i+TravelDuration} \big[ V((g_1, g_2), t, i-1) \lor \neg V((g_1, g_2), t, i) \lor V((g_1, g_2), t, i_2)\big] \\
+      & 
+      \bigwedge_{(g_1, g_2), t, i > 0} 
+      \bigwedge_{i+1<=i_2<i+TravelDuration} 
+      \big[ V((g_1, g_2), t, i-1) \lor \neg V((g_1, g_2), t, i) \lor V((g_1, g_2), t, i_2)\big] \\
     \end{split}
     \end{equation*}
 
@@ -111,9 +124,13 @@ gares. On supposera constant, les temps de trajet entre deux gares, ils seront d
 
     \begin{equation*}
     \begin{split}
-        & \bigwedge_{g, i} \bigwedge_{Ensemble De Trains E \{t_1, t_2, \cdot, t_{cg}, t_{c_g+1}\}} \bigvee_{t \in E} \neg G_{t, g, i}
+        & \bigwedge_{g, i} 
+        \bigwedge_{t_1, t_2, \cdots, t_{cg}, t_{c_g+1}} 
+        \bigvee_{1 \leq j \leq c_g+1} \neg G_{t_j, g, i}
     \end{split}
     \end{equation*}
+    
+
 \end{itemize}
 
 \subsection{Contraintes implicites}
@@ -134,16 +151,17 @@ gares. On supposera constant, les temps de trajet entre deux gares, ils seront d
 
 \begin{equation*}
     \begin{split}
-      & \bigwedge_{g_1, g_2, i>0, t, g_1 \neq g_2 }
+      & \bigwedge_{g_1, g_2, i, t, g_1 \neq g_2 }
       \big[\neg G_{g_1, i, t} \lor \neg G_{g_2, i, t} \big] \\
     \end{split}
     \end{equation*}
     
-\item Un train ne peut pas être sur 2 segment différents au même moment
+\item Un train ne peut pas être sur 2 segments différents au même moment
 
 \begin{equation*}
     \begin{split}
-      & \bigwedge_{(g_1, g_2), (g_3, g_4), i>0, t, g_1 \neq g_3, g_2 \neq g_4 }
+      & 
+      \bigwedge_{(g_1, g_2), (g_3, g_4), i, t, (g_1, g_2) \neq (g_3, g_4) }
       \big[\neg V_{(g_1, g_2), i, t} \lor \neg V_{(g_3, g_4), i, t} \big] \\
     \end{split}
     \end{equation*}
@@ -152,7 +170,7 @@ gares. On supposera constant, les temps de trajet entre deux gares, ils seront d
 
 \begin{equation*}
     \begin{split}
-      & \bigwedge_{(g_1, (g_2, g_3), i>0, t}
+      & \bigwedge_{g_1, (g_2, g_3), i, t}
       \big[\neg G_{g_1, i, t} \lor \neg V_{(g_2, g_3), i, t} \big] \\
     \end{split}
     \end{equation*}
@@ -162,7 +180,7 @@ gares. On supposera constant, les temps de trajet entre deux gares, ils seront d
 
 \begin{equation*}
     \begin{split}
-      & \bigwedge_{(g_1, g_2), t, i}
+      & \bigwedge_{(g_1, g_2), t, i > 0}
       \big[
       \big(\neg V_{(g_1, g_2), i-1, t} \lor V_{(g_1, g_2), i, t} \big)
       \lor
@@ -176,7 +194,7 @@ gares. On supposera constant, les temps de trajet entre deux gares, ils seront d
 
 \begin{equation*}
     \begin{split}
-      & \bigwedge_{g_1, t, i}
+      & \bigwedge_{g_1, t, i > 0}
       \big[
       \big(\neg G_{g_1, i-1, t} \lor G_{(g_1, i, t} \big)
       \lor
@@ -187,7 +205,7 @@ gares. On supposera constant, les temps de trajet entre deux gares, ils seront d
     
 \item Contraintes supplémentaires afin de rendre la variable booléenne $fait\_trajet$ cohérente
 
-Première partie \\
+Première partie: \\
 \begin{equation*}
     \begin{split}
       & \bigwedge_{t, g, g', i, i', g \neq g', i < i'}
@@ -195,7 +213,7 @@ Première partie \\
     \end{split}
     \end{equation*}
 
-Deuxième partie \\
+Deuxième partie: \\
 
 \begin{equation*}
     \begin{split}
@@ -215,12 +233,17 @@ Deuxième partie \\
 
 Remplaçons la première contrainte par: \\
 
+\begin{quote}
 Pour toute paire de gare $(g, g')$, pour chaque fenêtre horaire de durée $TimeWindow$,
 il est possible de prendre un train dans la fenêtre horaire, en gare $g$, pour aller vers $g'$
 après une durée maximale de trajet $TravelDuration$, le tout en changeant potentiellement de train au plus $NbChange$ fois. La version précédente du problème correspond
 au cas $NbChange=0$.
+\end{quote}
 
-Pour modéliser cette contrainte, nous avons besoin de trouver un moyen d'exprimer la notion "il y a un voyage partant de A à l'instant i et arrivant en B à l'instant j en utilisant k trains". Voici comment le modéliser:
+
+~\\
+
+Pour modéliser cette contrainte, nous avons besoin de trouver un moyen d'exprimer la notion "il y a un trajet partant de A à l'instant i et arrivant en B à l'instant j en utilisant k trains". Voici comment le modéliser:
 
 \begin{equation*}
     \begin{split}
@@ -233,7 +256,7 @@ Pour modéliser cette contrainte, nous avons besoin de trouver un moyen d'exprim
     \end{split}
 \end{equation*}
 
-Dans cette expression $i_{g, A}$ représente l'instant d'arrivée à la gare g et $i_{g, A}$ l'instant de départ de la gare g.
+Dans cette expression $i_{g, A}$ représente l'instant d'arrivée à la gare g et $i_{g, A}$ l'instant de départ de la gare g. $g_0$ est la gare de départ et $g_k$ est la gare d'arrivée. 
 
 Une fois qu'on a cette notion, il est assez facile d'écrire la nouvelle contrainte:
 
@@ -273,13 +296,13 @@ Pour modéliser cette amélioration, il faut modifier la contrainte 1 de façon 
     \end{equation*}
     
 Les TimeWindows acceptées sont toutes les timeWindows tel que 
-$$0 <= i_s, i_e = i + TimeWindow < TimeSlots$$
+$$0 \leq i_s < i_e = i + TimeWindow < TimeSlots$$
 
 \subsubsection{Limiter la quantité de retard admise ou autoriser le retard}
 
 Par défaut on autorise un retard illimité sur les voies, ce qui n'est pas très réaliste. Pour améliorer cela, on autorise au maximum 100\% de retard. Par exemple, si il faut 20 minutes pour parcourrir une voie, on autorise au maximum un temps de trajet de 40 minutes.
 
-Autrement dit, si la voie a comme temps de trajet minimum TravelDuration, le train peut rester au maximum 2 x TravelDuration sur la voie. Voici la contrainte qui modélise cette amélioration: 
+De manière plus générale, si la voie a comme temps de trajet minimum TravelDuration, le train peut rester au maximum 2 x TravelDuration sur la voie. Voici la contrainte qui modélise cette amélioration: 
 
 \begin{equation*}
     \begin{split}
@@ -291,9 +314,21 @@ Autrement dit, si la voie a comme temps de trajet minimum TravelDuration, le tra
         \bigwedge_{i + 1 < i' \leq i + 2 * TravelDuration} 
         V_{g_1, g_2, t, i'} \big) \\
     \end{split}
-    \end{equation*}
+\end{equation*}
 
+Ceci est équivalent (en forme normale conjonctive) à
 
+\begin{equation*}
+    \begin{split}
+      & \bigwedge_{(g_1, g_2), i > 0, t} 
+        \bigwedge_{i+1\leq i_2<i+TravelDuration} 
+        \big(  V_{g_1, g_2, t, i-1} \lor \neg V_{g_1, g_2, t, i}\big)
+        \lor   
+         \big( 
+        \bigvee_{i + 1 < i' \leq i + 2 * TravelDuration} 
+        \neg V_{g_1, g_2, t, i'} \big) \\
+    \end{split}
+\end{equation*}
 
 \section{Bonus}
 
