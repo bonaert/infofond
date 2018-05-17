@@ -220,6 +220,38 @@ il est possible de prendre un train dans la fenêtre horaire, en gare $g$, pour 
 après une durée maximale de trajet $TravelDuration$, le tout en changeant potentiellement de train au plus $NbChange$ fois. La version précédente du problème correspond
 au cas $NbChange=0$.
 
+Pour modéliser cette contrainte, nous avons besoin de trouver un moyen d'exprimer la notion "il y a un voyage partant de A à l'instant i et arrivant en B à l'instant j en utilisant k trains". Voici comment le modéliser:
+
+\begin{equation*}
+    \begin{split}
+      & 
+      Chemin_k(t,g_0,i_{0, D},g_k,i_{k, A}) \equiv
+      \bigvee_{g_1, g_2, ..., g_{k - 1}} 
+      \bigvee_{i_{0, D} < i_{1, A} < i_{1, D} < ... < i_{k - 1, A} < i_{k - 1, D} < i_{k, A}} 
+      \bigwedge_{0 < j < k - 1}
+      T_{t,g_j,i_{j, D},g_{j + 1},i_{j + 1, A}}
+    \end{split}
+\end{equation*}
+
+Dans cette expression $i_{g, A}$ représente l'instant d'arrivée à la gare g et $i_{g, A}$ l'instant de départ de la gare g.
+
+Une fois qu'on a cette notion, il est assez facile d'écrire la nouvelle contrainte:
+
+\begin{equation*}
+    \begin{split}
+      & 
+      \bigwedge_{(g,g'), g \neq g'} 
+      \bigwedge_{TimeWindow [i_s,i_e]}
+      \bigvee_{i \in [i_s,i_e]}
+      \bigvee_{i < i' \leq min(TimeSlots - 1, i + TravelDuration)}
+      \bigvee_{t}
+      \bigvee_{1 \leq k \leq 1 + NbChange}
+      Chemin_k(t,g,i,g',i') \\
+    \end{split}
+\end{equation*}
+
+Note: on utilise $Chemin_k$ plutôt que son expression équivalente par clarté.
+
 \subsection{Proposer deux améliorations rendant le modèle plus réaliste.}
 
 \subsubsection{Faire que les time windows puissent se superposer}
