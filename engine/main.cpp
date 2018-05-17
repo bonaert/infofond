@@ -150,15 +150,15 @@ void setupContrainte3(Graph *map){
     {
     	for (int i = 0; i < TIMESLOT - 1; ++i)
     	{
-    		for (int g1 = 0; g1 < TRAIN; ++g1)
+    		for (int g1 = 0; g1 < STATION; ++g1)
     		{
-    			for (int g2 = 0; g2 < TRAIN; ++g2)
+    			for (int g2 = 0; g2 < STATION; ++g2)
     			{
     				if (!voie_exists(map, g1, g2)) {
     					continue;
     				}
 
-    				for (int g3 = 0; g3 < TRAIN; ++g3)
+    				for (int g3 = 0; g3 < STATION; ++g3)
     				{
     					if (!voie_exists(map, g2, g3)) {
 							continue;
@@ -182,7 +182,7 @@ void setupContrainte4(Graph *map){
 	{
 		for (int g = 0; g < STATION; ++g)
 		{
-			for (int i = 0; i < TIMESLOT; ++i)
+			for (int i = 1; i < TIMESLOT; ++i)
 			{
 				for (int iEnd = i + 1; iEnd < i + TIMEWAIT && iEnd < TIMESLOT; ++iEnd)
 				{
@@ -206,7 +206,7 @@ void setupContrainte5(Graph *map){
 
 			for (int t = 0; t < TRAIN; ++t)
 			{
-				for (int i = 0; i < TIMESLOT - voieDuration; ++i)
+				for (int i = 1; i < TIMESLOT - voieDuration; ++i)
 				{
 					for (int i2 = i + 1; i2 < i + voieDuration; ++i2)
 					{

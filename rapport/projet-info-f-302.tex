@@ -67,8 +67,7 @@ Remplaçons la première contrainte par: \\
 
 Pour toute paire de gare $(g, g')$, pour chaque fenêtre horaire de durée $TimeWindow$,
 il est possible de prendre un train dans la fenêtre horaire, en gare $g$, pour aller vers $g'$
-après une durée maximale de trajet $TravelDuration$, le tout en changeant potentielle-
-ment de train au plus $NbChange$ fois. La version précédente du problème correspond
+après une durée maximale de trajet $TravelDuration$, le tout en changeant potentiellement de train au plus $NbChange$ fois. La version précédente du problème correspond
 au cas $NbChange=0$.
 
 \subsection{Proposer deux améliorations rendant le modèle plus réaliste.}
@@ -96,9 +95,11 @@ $$0 <= i_s, i_e = i + TimeWindow < TimeSlots$$
 
 \subsubsection{Limiter la quantité de retard admise ou autoriser le retard}
 
-Il faut attendre la réponse de l'assistant.
+Par défaut on autorise un retard illimité sur les voies, ce qui n'est pas très réaliste. Pour améliorer cela, on autorise au maximum 100\% de retard. Par exemple, si il faut 20 minutes pour parcourrir une voie, on autorise au maximum un temps de trajet de 40 minutes.
 
-% TODO ne pas oublier d'expliquer comment les modéliser en SAT
+Voici la contrainte qui modélise cette amélioration: 
+
+
 
 \section{Bonus}
 
