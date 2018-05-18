@@ -567,29 +567,6 @@ void setupContraintesPourUtiliserDerniereVariable(){
 	setupContrainte2PourUtiliserDerniereVariable();
 }
 
-
-void setupContrainteJamaisRetard(Graph* map){
-	int voieDuration;
-	// Après voieDuration minutes, on n'est plus sur la voie
-	for (int g1 = 0; g1 < STATION; ++g1)
-	{
-		for (int g2 = 0; g2 < STATION; ++g2)
-		{
-			if (g1 == g2 || !voie_exists(map, g1, g2)) continue;
-
-			voieDuration = map->get_duration(g1, g2);
-
-			for (int t = 0; t < TRAIN; ++t)
-			{
-				for (int i = 0; i < TIMESLOT - voieDuration - 1; ++i)
-				{
-					solver.addTernary(Lit(sur_voie[t][i - 1][g1][g2]), ~Lit(sur_voie[t][i][g1][g2]), ~Lit(sur_voie[t][i + voieDuration][g1][g2]));
-				}
-			}
-		}
-	}
-}
-
 int main() {
 	// ---------- Map ---------- //
 
@@ -627,13 +604,6 @@ int main() {
 	setupContrainteImplicite6(map);
 
 	setupContraintesPourUtiliserDerniereVariable();
-
-	// Amelioration 2: si on enleve ca, on autorise du retard, pour mieux simuler la SNCB
-	// setupContrainteJamaisRetard(map);
-
-
-
-
 
 
 	// ---------- Solver ---------- //
