@@ -513,9 +513,6 @@ void printRes(Graph* map) {
 	
 }
 
-/**
- * vérifier que  un déplacement d'une gare 1 à 2 en un temps TD correpond bien a un voyage
- */
 void setupContrainte1PourUtiliserDerniereVariable() {
 	for (int t = 0; t < TRAIN; ++t)
 	{
@@ -538,12 +535,6 @@ void setupContrainte1PourUtiliserDerniereVariable() {
 	}
 }
 
-
-
-
-/**
- * vérifier que un voyage correpond bien a un déplacement d'une gare 1 à 2 en un temps TD
- */
 vec<Lit> contraintesNewVar;
 void setupContrainte2PourUtiliserDerniereVariable() {
 	for (int t = 0; t < TRAIN; ++t)
