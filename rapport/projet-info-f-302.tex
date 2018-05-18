@@ -26,15 +26,15 @@
 \item $sur\_voie$ 
 \\
 \\
-La variable booléenne $sur\_voie$
+La variable booléenne $sur\_voie_{t,i,g_{1},g_{2}}$ indique la présence d'un train $t$ au temps $i$ sur la voie reliant les gares $g_{1}$ et $g_{2}$.
 \item $dans\_gare$
 \\
 \\
-La variable booléenne $dans\_gare$
+La variable booléenne $dans\_gare_{t,i,g}$ indique la présence d'un train $t$ dans une gare $g$ à un instant $i$.
 \item $fait\_trajet$
 \\
 \\
-La variable booléenne $fait\_trajet$
+La variable booléenne $fait\_trajet_{t,i_{1},i_{2},g_{1},g_{2}}$ indique la présence d'un train $t$ à l'instant $i_{1}$ dans la gare $g_{1}$ et à l'instant $i_{2}$ dans la gare $g_{2}$. \\ Elle est équivalente à $dans\_gare_{t,i_{1},g_{1}} \land dans\_gare_{t,i_{2},g_{2}}$.
 \end{itemize}
 
 
