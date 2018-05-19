@@ -306,12 +306,9 @@ De manière plus générale, si la voie a comme temps de trajet minimum TravelDu
 
 \begin{equation*}
     \begin{split}
-      & \bigwedge_{(g_1, g_2), i > 0, t} 
-        \bigwedge_{i+1\leq i_2<i+TravelDuration} 
-        \big( \neg V_{g_1, g_2, t, i-1} \land  V_{g_1, g_2, t, i}\big)
-        \implies   
+      & \bigwedge_{(g_1, g_2), t, i < TimeSlots - 2 * TravelDuration} 
         \neg \big( 
-        \bigwedge_{i + 1 < i' \leq i + 2 * TravelDuration} 
+        \bigwedge_{i \leq i' \leq i + 2 * TravelDuration} 
         V_{g_1, g_2, t, i'} \big) \\
     \end{split}
 \end{equation*}
@@ -320,12 +317,9 @@ Ceci est équivalent (en forme normale conjonctive) à
 
 \begin{equation*}
     \begin{split}
-      & \bigwedge_{(g_1, g_2), i > 0, t} 
-        \bigwedge_{i+1\leq i_2<i+TravelDuration} 
-        \big(  V_{g_1, g_2, t, i-1} \lor \neg V_{g_1, g_2, t, i}\big)
-        \lor   
+      & \bigwedge_{(g_1, g_2), t, i < TimeSlots - 2 * TravelDuration}         
          \big( 
-        \bigvee_{i + 1 < i' \leq i + 2 * TravelDuration} 
+        \bigvee_{i \leq i' \leq i + 2 * TravelDuration} 
         \neg V_{g_1, g_2, t, i'} \big) \\
     \end{split}
 \end{equation*}
